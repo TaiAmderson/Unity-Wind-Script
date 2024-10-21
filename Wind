@@ -1,0 +1,52 @@
+using UnityEngine;
+
+public class Wind : MonoBehaviour
+{
+    [Header("Wind Settings")]
+    public Vector3 windDirection = new Vector3(1f, 0f, 0f);
+    public float windForce = 5f;
+    public float windVariance = 0.5f;
+    public float windZoneRadius = 10f;
+
+    [Header("Affected Objects")]
+    public LayerMask affectedLayer;
+    public string[] nonAffectedTags;
+
+    private void Update()
+    {
+        ApplyWind();
+    }
+
+    private void ApplyWind()
+    {
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, windZoneRadius, affectedLayer);
+        foreach (Collider hit in hitColliders)
+        {
+            Rigidbody rb = hit.GetComponent<Rigidbody>();
+            if (rb != null && !IsNonAffected(hit.gameObject))
+            {
+                Vector3 adjustedWindForce = windDirection.normalized * windForce * Random.Range(1 - windVariance, 1 + windVariance);
+                rb.AddForce(adjustedWindForce);
+            }
+        }
+    }
+
+    private bool IsNonAffected(GameObject obj)
+    {
+        foreach (string tag in nonAffectedTags)
+        {
+            if (obj.CompareTag(tag))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawLine(transform.position, transform.position + windDirection.normalized * 5f);
+        Gizmos.DrawWireSphere(transform.position, windZoneRadius);
+    }
+}
